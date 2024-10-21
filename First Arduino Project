@@ -1,0 +1,51 @@
+#include <Servo.h>
+
+const int trigPin = 9;
+const int echoPin = 13;
+const int ledPin = 4;
+const int servoPin = 6;
+const int thresholdDistance = 60; // adjust this value as needed
+
+Servo myServo;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  myServo.attach(servoPin);
+}
+
+void loop() {
+  // Send a pulse to the ultrasonic sensor
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2000);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(1000);
+  digitalWrite(trigPin, LOW);
+  
+  // Measure the echo time
+  int duration = pulseIn(echoPin, HIGH);
+  
+  // Calculate the distance
+  int objectDistance = duration * 0.034 / 2;
+  
+  // Debouncing mechanism: wait 50ms before changing servo position
+  static unsigned long lastServoChange = 0;
+  unsigned long currentTime = millis();
+  if (currentTime - lastServoChange > 100) {
+    if (objectDistance < thresholdDistance) {
+      digitalWrite(ledPin, HIGH);
+      myServo.write(180); // rotate servo to 90 degrees
+    } else {
+      digitalWrite(ledPin, LOW);
+      myServo.write(0); // rotate servo to 0 degrees
+    }
+    lastServoChange = currentTime;
+  }
+  
+  // Print the distance to the serial monitor
+  Serial.print(objectDistance);
+  Serial.println("cm");
+  delay(500);
+}
